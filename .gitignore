@@ -1,0 +1,6 @@
+.env
+*.exe
+/api
+/worker
+/loadtest
+*.log
