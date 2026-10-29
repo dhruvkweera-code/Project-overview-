@@ -4,3 +4,8 @@
 /worker
 /loadtest
 *.log
+.claude/
+
+.claude/
+*.jtl
+jmeter-report/

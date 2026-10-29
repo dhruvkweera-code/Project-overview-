@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os/signal"
 	"syscall"
 	"time"
@@ -19,6 +20,11 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	go func() {
+		log.Println("pprof debug server on localhost:6060")
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
