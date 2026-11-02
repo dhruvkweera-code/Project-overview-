@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	GetMessageByUserAndMessageID(ctx context.Context, arg GetMessageByUserAndMessageIDParams) (Message, error)
+	UpdateMessageContent(ctx context.Context, arg UpdateMessageContentParams) (Message, error)
 	UpdateMessageStatus(ctx context.Context, arg UpdateMessageStatusParams) (Message, error)
 }
 

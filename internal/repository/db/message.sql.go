@@ -15,7 +15,7 @@ const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (user_id, message_id, content)
 VALUES ($1, $2, $3)
 ON CONFLICT (user_id, message_id) DO NOTHING
-RETURNING id, user_id, message_id, content, status, created_at, processed_at
+RETURNING id, user_id, message_id, content, status, created_at, processed_at, updated_at
 `
 
 type CreateMessageParams struct {
@@ -35,12 +35,13 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 		&i.Status,
 		&i.CreatedAt,
 		&i.ProcessedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getMessageByUserAndMessageID = `-- name: GetMessageByUserAndMessageID :one
-SELECT id, user_id, message_id, content, status, created_at, processed_at FROM messages WHERE user_id = $1 AND message_id = $2
+SELECT id, user_id, message_id, content, status, created_at, processed_at, updated_at FROM messages WHERE user_id = $1 AND message_id = $2
 `
 
 type GetMessageByUserAndMessageIDParams struct {
@@ -59,6 +60,36 @@ func (q *Queries) GetMessageByUserAndMessageID(ctx context.Context, arg GetMessa
 		&i.Status,
 		&i.CreatedAt,
 		&i.ProcessedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateMessageContent = `-- name: UpdateMessageContent :one
+UPDATE messages
+SET content = $3, status = 'PENDING', updated_at = now()
+WHERE user_id = $1 AND message_id = $2 AND status <> 'PROCESSING'
+RETURNING id, user_id, message_id, content, status, created_at, processed_at, updated_at
+`
+
+type UpdateMessageContentParams struct {
+	UserID    string `json:"user_id"`
+	MessageID string `json:"message_id"`
+	Content   string `json:"content"`
+}
+
+func (q *Queries) UpdateMessageContent(ctx context.Context, arg UpdateMessageContentParams) (Message, error) {
+	row := q.db.QueryRow(ctx, updateMessageContent, arg.UserID, arg.MessageID, arg.Content)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.MessageID,
+		&i.Content,
+		&i.Status,
+		&i.CreatedAt,
+		&i.ProcessedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -67,7 +98,7 @@ const updateMessageStatus = `-- name: UpdateMessageStatus :one
 UPDATE messages
 SET status = $3, processed_at = $4
 WHERE user_id = $1 AND message_id = $2
-RETURNING id, user_id, message_id, content, status, created_at, processed_at
+RETURNING id, user_id, message_id, content, status, created_at, processed_at, updated_at
 `
 
 type UpdateMessageStatusParams struct {
@@ -93,6 +124,7 @@ func (q *Queries) UpdateMessageStatus(ctx context.Context, arg UpdateMessageStat
 		&i.Status,
 		&i.CreatedAt,
 		&i.ProcessedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

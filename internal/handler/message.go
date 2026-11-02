@@ -14,6 +14,7 @@ const maxContentLength = 10_000
 type messageService interface {
 	Create(ctx context.Context, userID, messageID, content string) (db.Message, error)
 	GetByID(ctx context.Context, callerUserID, messageID string) (db.Message, error)
+	Update(ctx context.Context, userID, messageID, newContent string) (db.Message, error)
 }
 
 type MessageHandler struct {
@@ -83,8 +84,10 @@ func (h *MessageHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 type statusResponse struct {
 	MessageID   string  `json:"messageId"`
 	UserID      string  `json:"userId"`
+	Content     string  `json:"content"`
 	Status      string  `json:"status"`
 	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
 	ProcessedAt *string `json:"processedAt"`
 }
 
@@ -92,10 +95,14 @@ func toStatusResponse(msg db.Message) statusResponse {
 	resp := statusResponse{
 		MessageID: msg.MessageID,
 		UserID:    msg.UserID,
+		Content:   msg.Content,
 		Status:    msg.Status,
 	}
 	if msg.CreatedAt.Valid {
 		resp.CreatedAt = msg.CreatedAt.Time.Format(time.RFC3339)
+	}
+	if msg.UpdatedAt.Valid {
+		resp.UpdatedAt = msg.UpdatedAt.Time.Format(time.RFC3339)
 	}
 	if msg.ProcessedAt.Valid {
 		processedAt := msg.ProcessedAt.Time.Format(time.RFC3339)

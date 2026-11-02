@@ -16,6 +16,11 @@ import (
 type fakeMessageService struct {
 	createFn func(ctx context.Context, userID, messageID, content string) (db.Message, error)
 	getFn    func(ctx context.Context, callerUserID, messageID string) (db.Message, error)
+	updateFn func(ctx context.Context, userID, messageID, newContent string) (db.Message, error)
+}
+
+func (f *fakeMessageService) Update(ctx context.Context, userID, messageID, newContent string) (db.Message, error) {
+	return f.updateFn(ctx, userID, messageID, newContent)
 }
 
 func (f *fakeMessageService) Create(ctx context.Context, userID, messageID, content string) (db.Message, error) {
@@ -93,6 +98,7 @@ func TestGetByID_Valid(t *testing.T) {
 			return db.Message{
 				UserID:    callerUserID,
 				MessageID: messageID,
+				Content:   "Hello from Go",
 				Status:    "PENDING",
 				CreatedAt: pgtype.Timestamptz{Valid: true},
 			}, nil
@@ -109,6 +115,9 @@ func TestGetByID_Valid(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"content":"Hello from Go"`) {
+		t.Fatalf("body missing content: %s", rec.Body.String())
 	}
 }
 

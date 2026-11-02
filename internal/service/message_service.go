@@ -36,7 +36,7 @@ func (s *MessageService) Create(ctx context.Context, userID, messageID, content 
 		Content:   content,
 	})
 	if err == nil {
-		if pubErr := s.publishCreated(ctx, msg); pubErr != nil {
+		if pubErr := s.publishMessageEvent(ctx, msg); pubErr != nil {
 			return db.Message{}, fmt.Errorf("create message: publish: %w", pubErr)
 		}
 		return msg, nil
@@ -55,7 +55,7 @@ func (s *MessageService) Create(ctx context.Context, userID, messageID, content 
 	return existing, nil
 }
 
-func (s *MessageService) publishCreated(ctx context.Context, msg db.Message) error {
+func (s *MessageService) publishMessageEvent(ctx context.Context, msg db.Message) error {
 	value, err := json.Marshal(messageEvent{UserID: msg.UserID, MessageID: msg.MessageID})
 	if err != nil {
 		return fmt.Errorf("marshal event: %w", err)

@@ -48,6 +48,7 @@ func main() {
 	mux.HandleFunc("GET /health", handler.Health)
 	mux.HandleFunc("POST /messages", messageHandler.Create)
 	mux.HandleFunc("GET /messages/{messageId}", messageHandler.GetByID)
+	mux.HandleFunc("PUT /messages/{messageId}", messageHandler.Update)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

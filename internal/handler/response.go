@@ -24,8 +24,16 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 }
 
 func writeServiceErr(w http.ResponseWriter, err error) {
-	if errors.Is(err, service.ErrNotFound) {
+	switch {
+	case errors.Is(err, service.ErrNotFound):
 		writeError(w, http.StatusNotFound, "message not found")
+		return
+	case errors.Is(err, service.ErrConflict):
+		writeError(w, http.StatusConflict, "message is being processed, try again later")
+		return
+	case errors.Is(err, service.ErrQueueUnavailable):
+		log.Printf("queue unavailable: %v", err)
+		writeError(w, http.StatusServiceUnavailable, "queue unavailable, try again later")
 		return
 	}
 	log.Printf("unhandled service error: %v", err)

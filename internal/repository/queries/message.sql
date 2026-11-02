@@ -12,3 +12,9 @@ UPDATE messages
 SET status = $3, processed_at = $4
 WHERE user_id = $1 AND message_id = $2
 RETURNING *;
+
+-- name: UpdateMessageContent :one
+UPDATE messages
+SET content = $3, status = 'PENDING', updated_at = now()
+WHERE user_id = $1 AND message_id = $2 AND status <> 'PROCESSING'
+RETURNING *;
